@@ -304,14 +304,13 @@ Bangle.on('lcdPower',function(on) {
 });
 
 g.clear();
+// Show launcher when button pressed
+Bangle.setUI("clock");
 Bangle.loadWidgets();
 Bangle.drawWidgets();
 // Update time once a second
 timeInterval = setInterval(showTime, 1000);
 showTime();
-
-// Show launcher when middle button pressed
-setWatch(Bangle.showLauncher, BTN2, {repeat:false,edge:"falling"});
 
 // Start stopwatch when BTN3 is pressed
 setWatch(() => {swInterval=setInterval(stopWatch, 1000);stopWatch();}, BTN3, {repeat:false,edge:"falling"});

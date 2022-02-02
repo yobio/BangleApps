@@ -1,4 +1,22 @@
 var s = require("Storage");
+let fonts = g.getFonts();
+var scaleval = 1;
+var vectorval = 20;
+var font = g.getFonts().includes("12x20") ? "12x20" : "6x8:2";
+let settings = require('Storage').readJSON("launch.json", true) || {};
+if ("vectorsize" in settings) {
+    vectorval = parseInt(settings.vectorsize);
+}
+if ("font" in settings){
+    if(settings.font == "Vector"){
+        scaleval = vectorval/20;
+        font = "Vector"+(vectorval).toString();
+    }
+    else{
+        font = settings.font;
+        scaleval = (font.split('x')[1])/20;
+    }
+}
 var apps = s.list(/\.info$/).map(app=>{var a=s.readJSON(app,1);return a&&{name:a.name,type:a.type,icon:a.icon,sortorder:a.sortorder,src:a.src};}).filter(app=>app && (app.type=="app" || app.type=="clock" || !app.type));
 apps.sort((a,b)=>{
   var n=(0|a.sortorder)-(0|b.sortorder);
@@ -7,60 +25,56 @@ apps.sort((a,b)=>{
   if (a.name>b.name) return 1;
   return 0;
 });
-var selected = 0;
-var menuScroll = 0;
-var menuShowing = false;
-
-function drawMenu() {
-  g.setFont("6x8",2);
-  g.setFontAlign(-1,0);
-  var n = 3;
-  if (selected>=n+menuScroll) menuScroll = 1+selected-n;
-  if (selected<menuScroll) menuScroll = selected;
-  // arrows
-  g.setColor(menuScroll ? -1 : 0);
-  g.fillPoly([120,6,106,20,134,20]);
-  g.setColor((apps.length>n+menuScroll) ? -1 : 0);
-  g.fillPoly([120,233,106,219,134,219]);
-  // draw
-  g.setColor(-1);
-  for (var i=0;i<n;i++) {
-    var app = apps[i+menuScroll];
-    if (!app) break;
-    var y = 24+i*64;
-    if (i+menuScroll==selected) {
-      g.setColor(0.3,0.3,0.3);
-      g.fillRect(0,y,239,y+63);
-      g.setColor(1,1,1);
-      g.drawRect(0,y,239,y+63);
-    } else
-      g.clearRect(0,y,239,y+63);
-    g.drawString(app.name,64,y+32);
-    var icon=undefined;
-    if (app.icon) icon = s.read(app.icon);
-    if (icon) try {g.drawImage(icon,8,y+8);} catch(e){}
-  }
+apps.forEach(app=>{
+  if (app.icon)
+    app.icon = s.read(app.icon); // should just be a link to a memory area
+});
+// FIXME: check not needed after 2v11
+if (g.wrapString) {
+  g.setFont(font);
+  apps.forEach(app=>app.name = g.wrapString(app.name, g.getWidth()-64).join("\n"));
 }
-drawMenu();
-setWatch(function() {
-  selected--;
-  if (selected<0) selected = apps.length-1;
-  drawMenu();
-}, BTN1, {repeat:true});
-setWatch(function() {
-  selected++;
-  if (selected>=apps.length) selected = 0;
-  drawMenu();
-}, BTN3, {repeat:true});
-setWatch(function() { // run
-  if (!apps[selected].src) return;
-  if (require("Storage").read(apps[selected].src)===undefined) {
-    E.showMessage("App Source\nNot found");
-    setTimeout(drawMenu, 2000);
-  } else {
-    E.showMessage("Loading...");
-    load(apps[selected].src);
-  }
-}, BTN2, {repeat:true,edge:"falling"});
+
+function drawApp(i, r) {
+  var app = apps[i];
+  if (!app) return;
+  g.clearRect((r.x),(r.y),(r.x+r.w-1), (r.y+r.h-1));
+  g.setFont(font).setFontAlign(-1,0).drawString(app.name,64*scaleval,r.y+(32*scaleval));
+  if (app.icon) try {g.drawImage(app.icon,8*scaleval, r.y+(8*scaleval), {scale: scaleval});} catch(e){}
+}
+
+g.clear();
 Bangle.loadWidgets();
 Bangle.drawWidgets();
+
+E.showScroller({
+  h : 64*scaleval, c : apps.length,
+  draw : drawApp,
+  select : i => {
+    var app = apps[i];
+    if (!app) return;
+    if (!app.src || require("Storage").read(app.src)===undefined) {
+      E.showMessage("App Source\nNot found");
+      setTimeout(drawMenu, 2000);
+    } else {
+      E.showMessage("Loading...");
+      load(app.src);
+    }
+  }
+});
+
+// on bangle.js 2, the screen is used for navigating, so the single button goes back
+// on bangle.js 1, the buttons are used for navigating
+if (process.env.HWVERSION==2) {
+  setWatch(_=>load(), BTN1, {edge:"falling"});
+}
+
+// 10s of inactivity goes back to clock
+Bangle.setLocked(false); // unlock initially
+var lockTimeout;
+Bangle.on('lock', locked => {
+  if (lockTimeout) clearTimeout(lockTimeout);
+  lockTimeout = undefined;
+  if (locked)
+    lockTimeout = setTimeout(_=>load(), 10000);
+});

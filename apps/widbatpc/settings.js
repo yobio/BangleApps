@@ -10,8 +10,10 @@
   let s = {
     'color': COLORS[0],
     'percentage': true,
+    'fillbar': false,
     'charger': true,
     'hideifmorethan': 100,
+    'alwaysoncharge': false,
   }
   // ...and overwrite them with any saved values
   // This way saved values are preserved if a new version adds more settings
@@ -54,6 +56,11 @@
         save('color')(s.color)
       }
     },
+    'Fill Bar': {
+      value: s.fillbar,
+      format: onOffFormat,
+      onchange: save('fillbar'),
+    },
     'Hide if >': {
       value: s.hideifmorethan||100,
       min: 10,
@@ -61,6 +68,11 @@
       step: 10,
       format: x => x+"%",
       onchange: save('hideifmorethan'),
+    },
+    'Show on charge': { // Not sure if this is readable enough in the 'big' menu
+      value: s.alwaysoncharge,
+      format: onOffFormat,
+      onchange: save('alwaysoncharge'),
     },
   }
   E.showMenu(menu)

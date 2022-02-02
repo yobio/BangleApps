@@ -6,4 +6,7 @@ package-lock.json
 appdates.csv
 .vscode
 .idea/
-_config.yml 
+_config.yml
+tests/Layout/bin/tmp.*
+tests/Layout/testresult.bmp
+apps.local.json

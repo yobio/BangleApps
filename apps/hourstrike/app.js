@@ -1,24 +1,10 @@
 const storage = require('Storage');
-let settings;
+var settings = storage.readJSON('hourstrike.json', 1);
+const chimes = ["Buzz", "Beep"];
 
 function updateSettings() {
   storage.write('hourstrike.json', settings);
 }
-
-function resetSettings() {
-  settings = {
-    interval: 3600,
-    start: 9,
-    end: 21,
-    vlevel: 0.5,
-    next_hour: -1,
-    next_minute: -1,
-  };
-  updateSettings();
-}
-
-settings = storage.readJSON('hourstrike.json', 1);
-if (!settings) resetSettings();
 
 function showMainMenu() {
   var mode_txt = ['Off','1 min','5 min','10 min','1/4 h','1/2 h','1 h'];
@@ -41,6 +27,12 @@ function showMainMenu() {
   mainmenu.Strength = {
     value: settings.vlevel*10, min: 1, max: 10, format: v=>v/10,
     onchange: v=> {settings.vlevel = v/10; updateSettings();}};
+  mainmenu.Strikecount = {
+    value: settings.scount, min: 1, max: 2, format: v=>v,
+    onchange: v=> {settings.scount = v; updateSettings();}};
+  mainmenu.Chimetype = {
+    value: settings.buzzOrBeep, min: 0, max: 1, format: v => chimes[v],
+    onchange: v=> {settings.buzzOrBeep = v; updateSettings();}};
   mainmenu['< Back'] = ()=>load();
   return E.showMenu(mainmenu);
 }
