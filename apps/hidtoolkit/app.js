@@ -1,7 +1,7 @@
 Bangle.loadWidgets();
 Bangle.drawWidgets();
 
-var kb = require("ble_hid_azerty");
+var kb = require("https://raw.githubusercontent.com/yobio/Puck.js-Azerty-HID/main/ble_hid_azerty.js");
 NRF.setServices(undefined, { hid : kb.report });
 
 var settings = require('Storage').readJSON("hidtoolkit.json", true) || {};
