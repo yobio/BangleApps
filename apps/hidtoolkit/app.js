@@ -8,33 +8,44 @@ var settings = require('Storage').readJSON("hidtoolkit.json", true) || {};
 var typedelay = settings.typedelay || 0.5;
 
 
-function shutdown() {
+function shutdown(callback) {
   // Send 'WIN+r'
   kb.tap(kb.KEY.R, kb.MODIFY.LEFT_GUI, function() {
 
     setTimeout(function() {
       // Type 'shutdown -p\n'
-      kb.type('shutdown -p\n');
+      kb.type('shutdown -p\n', function() {if (callback) callback();});
     }, typedelay * 1000);
 
   });
 }
 
-function htmlpage(url) {
+function htmlpage(url, callback) {
   // Send 'WIN+r'
   kb.tap(kb.KEY.R, kb.MODIFY.LEFT_GUI, function() {
 
     setTimeout(function() {
       // Type 'msedge --kiosk ${url} --edge-kiosk-type=fullscreen\n'
-      kb.type('msedge --kiosk ' + url + ' --edge-kiosk-type=fullscreen\n');
-      //kb.type('iexplore -k ' + url + '\n');
+      kb.type('msedge --kiosk ' + url + ' --edge-kiosk-type=fullscreen\n', function() {if (callback) callback();});
     }, typedelay * 1000);
 
   });
 }
 
-function altf4() {
-  kb.tap(kb.KEY.F4, kb.MODIFY.ALT);
+function altf4(callback) {
+  kb.tap(kb.KEY.F4, kb.MODIFY.ALT, function() {if (callback) callback();});
+}
+
+
+function executing(func, args) {
+  E.showMessage('Executing payload...');
+  Bangle.setLCDPower(1);
+  var args = args || [];
+  args.push(function() {
+    E.showMenu(mainmenu);
+    //Bangle.setLCDPower(0);
+  });
+  func.apply(this, args);
 }
 
 var mainmenu = {
@@ -44,10 +55,10 @@ var mainmenu = {
   "< Back" : function() { load(); },
   "HTML Page" : function() { E.showMenu(htmlmenu); },
   "AltF4" : function() {
-    altf4();
+    executing(altf4);
   },
   "Shutdown" : function() {
-    shutdown();
+    executing(shutdown);
   },
 };
 var htmlmenu = {
@@ -56,10 +67,10 @@ var htmlmenu = {
   },
   "< Back" : function() { E.showMenu(mainmenu); },
   "Fake Update" : function() {
-    htmlpage('fakeupdate.com/win10ue');
+    executing(htmlpage, args=['fakeupdate.com/win10ue']);
   },
   "Fake BIOS" : function() {
-    htmlpage('pranx.com/bios');
+    executing(htmlpage, args=['pranx.com/bios']);
   },
 };
 
