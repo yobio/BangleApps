@@ -13,8 +13,16 @@
       "title" : "HID Toolkit"
     },
     "< Back" : () => back(),
+    "Target OS" : {
+      value : (settings.targetos===undefined)?true:settings.targetos,
+      format : v => v?"Win10":"Linux",
+      onchange : v => {
+        settings.targetos = v;
+        writeSettings();
+      }
+    },
     "WIN+R Delay" : {
-      value : settings.typedelay || 0.5,
+      value : (settings.typedelay===undefined)?0.5:settings.typedelay,
       min:0,max:10,step:0.1,
       onchange : v => {
         settings.typedelay = v;
