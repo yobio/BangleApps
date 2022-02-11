@@ -2,7 +2,7 @@
   "name": "HID Toolkit",
   "shortName":"HID Toolkit",
   "icon": "app.png",
-  "version":"0.02",
+  "version":"0.03",
   "description": "Some utilities working with Bluetooth HID.",
   "tags": "bluetooth,tool",
   "supports": ["BANGLEJS","BANGLEJS2"],
